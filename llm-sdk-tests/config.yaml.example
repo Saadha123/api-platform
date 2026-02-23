@@ -31,34 +31,32 @@ providers:
     base_url: "https://<gateway-host>/<provider-context>/v1"
     api_key: "gw_..."
     models:
-      - "gpt-4o-mini"
+      - "gpt-4.1-nano"
       - "gpt-4.1-mini"
 
   azure_openai:
     enabled: false
     base_url: "https://<gateway-host>/<provider-context>"
     api_key: "gw_..."
-    # Azure-specific: deployment name and API version
-    deployment: "gpt-4"
-    api_version: "2024-05-01-preview"
+    api_version: "2024-06-01"
     models:
-      - "gpt-4"
+      - "<azure-deployment-name>"   # Azure deployment name (used as the deployment in the URL)
 
   anthropic:
     enabled: false
     base_url: "https://<gateway-host>/<provider-context>"
     api_key: "gw_..."
     models:
-      - "claude-3-5-sonnet-20241022"
-      - "claude-3-opus-20240229"
+      - "claude-sonnet-4-5"
+      - "claude-opus-4-6"
 
   gemini:
     enabled: false
     base_url: "https://<gateway-host>/<provider-context>"
     api_key: "gw_..."
     models:
-      - "gemini-1.5-flash"
-      - "gemini-1.5-pro"
+      - "gemini-2.5-flash"
+      - "gemini-2.5-pro"
 
   mistral:
     enabled: false
@@ -68,26 +66,7 @@ providers:
       - "mistral-small-latest"
       - "mistral-large-latest"
 
-  # AWS Bedrock: the gateway authenticates the client with api_key and uses
-  # its own AWS credentials upstream.  boto3 is configured with unsigned
-  # requests so it does not add AWS SigV4; the gateway API key is injected
-  # via the X-API-Key header instead.
-  bedrock:
-    enabled: false
-    base_url: "https://<gateway-host>/<provider-context>"
-    api_key: "gw_..."
-    region: "us-east-1"
-    models:
-      - "amazon.titan-text-premier-v1:0"
-      - "anthropic.claude-v2"
 
-  # Meta (Llama) - exposed as an OpenAI-compatible endpoint by the gateway.
-  meta:
-    enabled: false
-    base_url: "https://<gateway-host>/<provider-context>/v1"
-    api_key: "gw_..."
-    models:
-      - "us.meta.llama3-3-70b-instruct-v1:0"
 
 # ── Proxies ───────────────────────────────────────────────────────────────────
 # Each proxy entry represents one LLM proxy created in the AI workspace.
@@ -96,38 +75,44 @@ providers:
 #                              bedrock, meta
 
 proxies:
-  - name: "My OpenAI Proxy"
-    enabled: false
-    proxy_id: "my-openai-proxy-id"
-    provider_type: "openai"
-    base_url: "https://<gateway-host>/<proxy-context>/v1"
-    api_key: "gw_..."
-    models:
-      - "gpt-4o-mini"
-
-  - name: "My Anthropic Proxy"
-    enabled: false
-    proxy_id: "my-anthropic-proxy-id"
-    provider_type: "anthropic"
-    base_url: "https://<gateway-host>/<proxy-context>"
-    api_key: "gw_..."
-    models:
-      - "claude-3-5-sonnet-20241022"
-
-  - name: "My Gemini Proxy"
-    enabled: false
-    proxy_id: "my-gemini-proxy-id"
-    provider_type: "gemini"
-    base_url: "https://<gateway-host>/<proxy-context>"
-    api_key: "gw_..."
-    models:
-      - "gemini-1.5-flash"
-
   - name: "My Mistral Proxy"
     enabled: false
-    proxy_id: "my-mistral-proxy-id"
     provider_type: "mistral"
     base_url: "https://<gateway-host>/<proxy-context>"
     api_key: "gw_..."
     models:
       - "mistral-small-latest"
+
+  - name: "My Anthropic Proxy"
+    enabled: false
+    provider_type: "anthropic"
+    base_url: "https://<gateway-host>/<proxy-context>"
+    api_key: "gw_..."
+    models:
+      - "claude-sonnet-4-5"
+      - "claude-opus-4-6"
+
+  - name: "My Gemini Proxy"
+    enabled: false
+    provider_type: "gemini"
+    base_url: "https://<gateway-host>/<proxy-context>"
+    api_key: "gw_..."
+    models:
+      - "gemini-2.5-flash"
+
+  - name: "My OpenAI Proxy"
+    enabled: false
+    provider_type: "openai"
+    base_url: "https://<gateway-host>/<proxy-context>/v1"
+    api_key: "gw_..."
+    models:
+      - "gpt-4.1-nano"
+
+  - name: "My Azure OpenAI Proxy"
+    enabled: false
+    provider_type: "azure_openai"
+    base_url: "https://<gateway-host>/<proxy-context>"
+    api_key: "gw_..."
+    api_version: "2024-06-01"
+    models:
+      - "<azure-deployment-name>"
