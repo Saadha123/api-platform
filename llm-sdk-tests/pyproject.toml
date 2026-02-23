@@ -1,0 +1,25 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+# Live logging – print log records in real time next to each test
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+log_cli_date_format = "%H:%M:%S"
+markers = [
+    "provider: LLM provider tests",
+    "proxy: LLM proxy tests",
+    "openai: OpenAI provider/proxy",
+    "azure_openai: Azure OpenAI provider/proxy",
+    "anthropic: Anthropic provider/proxy",
+    "gemini: Google Gemini provider/proxy",
+    "mistral: Mistral provider/proxy",
+    "bedrock: AWS Bedrock provider/proxy",
+    "chat: Chat completion tests",
+    "embeddings: Embedding tests",
+    "streaming: Streaming response tests",
+]
