@@ -123,7 +123,8 @@ proxies:
     enabled: true
     provider_type: "azure_openai"
     base_url: "https://localhost:8443/azure-openai-proxy"
-    api_key: "ecb86f0ceb57bad5a8ff33f54cf73fad4d7e0bd8c5d7b1e4d3ee6441f70d47e2"
+#    base_url: "https://10.100.8.108:8443/azure-openai-proxy"
+    api_key: "e08ac8580bad6d2156a2e7f492514bfe64b2c3fa966132e133d1d5c5cb235995"
     api_version: "2024-06-01"
     models:
       - "apim-4o-mini"
