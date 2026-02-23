@@ -123,6 +123,11 @@ cli/src/tests/target/
 /.claude/agents/gateway-operator-expert.md
 .claude/
 
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
 # Component specific patterns
 # Platform API
 platform-api/src/data
