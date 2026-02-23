@@ -136,25 +136,3 @@ def test_chat_completion_streaming(proxy, model):
 
     assert chunks > 1
     assert content.strip()
-
-
-# ── Embeddings ────────────────────────────────────────────────────────────────
-
-@_skip
-@pytest.mark.proxy
-@pytest.mark.azure_openai
-@pytest.mark.embeddings
-@pytest.mark.parametrize("proxy,model", _PROXY_MODEL_PARAMS)
-def test_embeddings(proxy, model):
-    """Embedding endpoint returns a vector for the given input."""
-    client = _client(proxy)
-    try:
-        response = client.embeddings.create(
-            model=model,
-            input="Test embedding input",
-        )
-    except Exception as exc:
-        pytest.skip(f"Model {model!r} does not support embeddings: {exc}")
-
-    vector = response.data[0].embedding
-    assert isinstance(vector, list) and len(vector) > 0

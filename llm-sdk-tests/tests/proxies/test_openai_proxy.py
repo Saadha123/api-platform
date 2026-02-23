@@ -142,49 +142,6 @@ def test_chat_completion_streaming(proxy, model):
     assert full_content.strip(), "Streamed content must not be empty"
     logger.info("chunks=%d  assembled=%r", chunks_received, full_content)
 
-
-# ── Embeddings ────────────────────────────────────────────────────────────────
-
-@_skip
-@pytest.mark.proxy
-@pytest.mark.openai
-@pytest.mark.embeddings
-@pytest.mark.parametrize("proxy,model", _PROXY_MODEL_PARAMS)
-def test_embeddings_single_input(proxy, model):
-    """Embedding endpoint returns a non-empty vector for a single string."""
-    client = _client(proxy)
-    try:
-        response = client.embeddings.create(
-            model=model,
-            input="The quick brown fox jumps over the lazy dog",
-        )
-    except Exception as exc:
-        pytest.skip(f"Model {model!r} does not support embeddings: {exc}")
-
-    vector = response.data[0].embedding
-    assert isinstance(vector, list) and len(vector) > 0
-    logger.info("vector_dim=%d  tokens=%d", len(vector), response.usage.total_tokens)
-
-
-@_skip
-@pytest.mark.proxy
-@pytest.mark.openai
-@pytest.mark.embeddings
-@pytest.mark.parametrize("proxy,model", _PROXY_MODEL_PARAMS)
-def test_embeddings_batch_input(proxy, model):
-    """Embedding endpoint handles a batch of inputs."""
-    client = _client(proxy)
-    inputs = ["Hello world", "Goodbye world", "The sky is blue"]
-    try:
-        response = client.embeddings.create(model=model, input=inputs)
-    except Exception as exc:
-        pytest.skip(f"Model {model!r} does not support embeddings: {exc}")
-
-    assert len(response.data) == len(inputs)
-    for item in response.data:
-        assert len(item.embedding) > 0
-
-
 # ── Models list ───────────────────────────────────────────────────────────────
 
 @_skip

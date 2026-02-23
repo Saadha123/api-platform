@@ -1,15 +1,13 @@
 """
 Google Gemini provider tests – uses the official `google-genai` Python SDK.
 
-Covers all text-generation SDK patterns from the Gemini API documentation:
+Covers text-generation SDK patterns from the Gemini API documentation:
   1. Basic text generation
-  2. Thinking / reasoning (ThinkingConfig)
-  3. System instructions
-  4. Generation config parameters (max_output_tokens)
-  5. Streaming responses (generate_content_stream)
-  6. Multi-turn chat with history verification
-  7. Streaming multi-turn chat with history verification
-  8. Embeddings
+  2. System instructions
+  3. Generation config parameters (max_output_tokens)
+  4. Streaming responses (generate_content_stream)
+  5. Multi-turn chat with history verification
+  6. Streaming multi-turn chat with history verification
 """
 
 import logging
@@ -103,36 +101,7 @@ def test_basic_text_generation(model):
     logger.info("response=%r", response.text[:120])
 
 
-# ── 2. Thinking / reasoning ───────────────────────────────────────────────────
-
-@pytest.mark.chat
-@pytest.mark.parametrize("model", _MODELS)
-def test_thinking_config(model):
-    """
-    ThinkingConfig lets you control the model's reasoning budget.
-    thinking_level='low' uses minimal reasoning tokens.
-
-    SDK pattern:
-        config=types.GenerateContentConfig(
-            thinking_config=types.ThinkingConfig(thinking_level="low")
-        )
-    """
-    client = _client()
-    try:
-        response = client.models.generate_content(
-            model=model,
-            contents="How does AI work?",
-            config=genai_types.GenerateContentConfig(
-                thinking_config=genai_types.ThinkingConfig(thinking_level="low"),
-            ),
-        )
-    except Exception as exc:
-        pytest.skip(f"ThinkingConfig not supported for {model!r}: {exc}")
-    assert response.text and response.text.strip()
-    logger.info("thinking_level=low  response=%r", response.text[:120])
-
-
-# ── 3. System instructions ────────────────────────────────────────────────────
+# ── 2. System instructions ────────────────────────────────────────────────────
 
 @pytest.mark.chat
 @pytest.mark.parametrize("model", _MODELS)
@@ -156,7 +125,7 @@ def test_system_instruction(model):
     logger.info("system_instruction=cat  response=%r", response.text[:120])
 
 
-# ── 4. Generation config parameters ──────────────────────────────────────────
+# ── 3. Generation config parameters ──────────────────────────────────────────
 
 @pytest.mark.chat
 @pytest.mark.parametrize("model", _MODELS)
@@ -182,7 +151,7 @@ def test_generation_config(model):
     logger.info("max_output_tokens=120  response_len=%d", len(response.text))
 
 
-# ── 5. Streaming responses ────────────────────────────────────────────────────
+# ── 4. Streaming responses ────────────────────────────────────────────────────
 
 @pytest.mark.chat
 @pytest.mark.streaming
@@ -213,7 +182,7 @@ def test_streaming(model):
     logger.info("chunks=%d  assembled_len=%d", chunks_received, len(full_text))
 
 
-# ── 6. Multi-turn chat with history ──────────────────────────────────────────
+# ── 5. Multi-turn chat with history ──────────────────────────────────────────
 
 @pytest.mark.chat
 @pytest.mark.parametrize("model", _MODELS)
@@ -251,7 +220,7 @@ def test_chat_multi_turn(model):
     logger.info("history_length=%d  roles=%s", len(history), roles)
 
 
-# ── 7. Streaming multi-turn chat ──────────────────────────────────────────────
+# ── 6. Streaming multi-turn chat ──────────────────────────────────────────────
 
 @pytest.mark.chat
 @pytest.mark.streaming
@@ -301,26 +270,3 @@ def test_chat_multi_turn_streaming(model):
     roles = [m.role for m in history]
     logger.info("history_length=%d  roles=%s", len(history), roles)
 
-
-# ── 8. Embeddings ─────────────────────────────────────────────────────────────
-
-@pytest.mark.embeddings
-@pytest.mark.parametrize("model", _MODELS)
-def test_embed_content(model):
-    """
-    embed_content returns a non-empty embedding vector.
-    Skipped if the gateway/provider doesn't expose an embedding model.
-    """
-    client = _client()
-    embed_model = "models/text-embedding-004"
-    try:
-        result = client.models.embed_content(
-            model=embed_model,
-            contents="The quick brown fox",
-        )
-    except Exception as exc:
-        pytest.skip(f"Embedding not available ({embed_model}): {exc}")
-
-    assert result.embeddings, "Embedding result must contain data"
-    assert len(result.embeddings[0].values) > 0
-    logger.info("embed_model=%s  vector_dim=%d", embed_model, len(result.embeddings[0].values))

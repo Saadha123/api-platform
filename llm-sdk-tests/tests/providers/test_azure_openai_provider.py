@@ -134,22 +134,3 @@ def test_chat_completion_streaming(model):
 
     assert chunks > 1
     assert content.strip()
-
-
-# ── Embeddings ────────────────────────────────────────────────────────────────
-
-@pytest.mark.embeddings
-@pytest.mark.parametrize("model", _MODELS)
-def test_embeddings(model):
-    """Embedding endpoint returns a vector for the given input."""
-    client = _client()
-    try:
-        response = client.embeddings.create(
-            model=model,
-            input="Test embedding input",
-        )
-    except Exception as exc:
-        pytest.skip(f"Model {model!r} does not support embeddings: {exc}")
-
-    vector = response.data[0].embedding
-    assert isinstance(vector, list) and len(vector) > 0

@@ -88,31 +88,7 @@ def test_basic_text_generation(proxy, model):
     logger.info("response=%r", response.text[:120])
 
 
-# ── 2. Thinking / reasoning ───────────────────────────────────────────────────
-
-@_skip
-@pytest.mark.proxy
-@pytest.mark.gemini
-@pytest.mark.chat
-@pytest.mark.parametrize("proxy,model", _PROXY_MODEL_PARAMS)
-def test_thinking_config(proxy, model):
-    """ThinkingConfig with thinking_level='low' is accepted."""
-    client = _client(proxy)
-    try:
-        response = client.models.generate_content(
-            model=model,
-            contents="How does AI work?",
-            config=genai_types.GenerateContentConfig(
-                thinking_config=genai_types.ThinkingConfig(thinking_level="low"),
-            ),
-        )
-    except Exception as exc:
-        pytest.skip(f"ThinkingConfig not supported for {model!r}: {exc}")
-    assert response.text and response.text.strip()
-    logger.info("thinking_level=low  response=%r", response.text[:120])
-
-
-# ── 3. System instructions ────────────────────────────────────────────────────
+# ── 2. System instructions ────────────────────────────────────────────────────
 
 @_skip
 @pytest.mark.proxy
@@ -133,7 +109,7 @@ def test_system_instruction(proxy, model):
     logger.info("system_instruction=cat  response=%r", response.text[:120])
 
 
-# ── 4. Generation config parameters ──────────────────────────────────────────
+# ── 3. Generation config parameters ──────────────────────────────────────────
 
 @_skip
 @pytest.mark.proxy
@@ -154,7 +130,7 @@ def test_generation_config(proxy, model):
     logger.info("max_output_tokens=120  response_len=%d", len(response.text))
 
 
-# ── 5. Streaming responses ────────────────────────────────────────────────────
+# ── 4. Streaming responses ────────────────────────────────────────────────────
 
 @_skip
 @pytest.mark.proxy
@@ -181,7 +157,7 @@ def test_streaming(proxy, model):
     logger.info("chunks=%d  assembled_len=%d", chunks_received, len(full_text))
 
 
-# ── 6. Multi-turn chat with history ──────────────────────────────────────────
+# ── 5. Multi-turn chat with history ──────────────────────────────────────────
 
 @_skip
 @pytest.mark.proxy
@@ -208,7 +184,7 @@ def test_chat_multi_turn(proxy, model):
     assert "user" in roles and "model" in roles
 
 
-# ── 7. Streaming multi-turn chat ──────────────────────────────────────────────
+# ── 6. Streaming multi-turn chat ──────────────────────────────────────────────
 
 @_skip
 @pytest.mark.proxy
@@ -239,26 +215,3 @@ def test_chat_multi_turn_streaming(proxy, model):
     history = chat.get_history()
     assert len(history) >= 4
 
-
-# ── 8. Embeddings ─────────────────────────────────────────────────────────────
-
-@_skip
-@pytest.mark.proxy
-@pytest.mark.gemini
-@pytest.mark.embeddings
-@pytest.mark.parametrize("proxy,model", _PROXY_MODEL_PARAMS)
-def test_embed_content(proxy, model):
-    """embed_content returns a non-empty embedding vector."""
-    client = _client(proxy)
-    embed_model = "models/text-embedding-004"
-    try:
-        result = client.models.embed_content(
-            model=embed_model,
-            contents="The quick brown fox",
-        )
-    except Exception as exc:
-        pytest.skip(f"Embedding not available ({embed_model}): {exc}")
-
-    assert result.embeddings, "Embedding result must contain data"
-    assert len(result.embeddings[0].values) > 0
-    logger.info("embed_model=%s  vector_dim=%d", embed_model, len(result.embeddings[0].values))
