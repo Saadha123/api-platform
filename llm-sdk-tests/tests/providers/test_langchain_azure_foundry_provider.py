@@ -1,17 +1,15 @@
 """
-Azure AI Foundry provider tests using the LangChain Azure AI SDK (langchain-azure-ai).
+Azure AI Foundry provider tests using the LangChain SDK (langchain-openai).
 
-Requires: pip install langchain-azure-ai
+Requires: pip install langchain-openai
 
-Uses AzureAIChatCompletionsModel which drives the Azure AI Model Inference endpoint:
-  POST {endpoint}/chat/completions
+Uses AzureChatOpenAI which drives the OpenAI-compatible Azure deployment endpoint:
+  POST {azure_endpoint}/openai/deployments/{azure_deployment}/chat/completions
 
-The endpoint must include /models so the full path becomes /models/chat/completions.
 Gateway path rewriting (context = /azure-foundry, upstream = resource root):
-  endpoint passed: {base_url}/models
-  SDK sends to:    /azure-foundry/models/chat/completions
+  SDK constructs:  /azure-foundry/openai/deployments/{model}/chat/completions
   gateway strips:  /azure-foundry
-  gateway forwards:https://{resource}.cognitiveservices.azure.com/models/chat/completions
+  gateway forwards:https://{resource}.cognitiveservices.azure.com/openai/deployments/{model}/...
 
 Resources tested:
   - Basic invoke (single-turn)
@@ -29,14 +27,10 @@ from utils.config import (
     get_verify_ssl,
 )
 
-# Skip entire module if langchain-azure-ai is not installed
-pytest.importorskip(
-    "langchain_azure_ai",
-    reason="langchain-azure-ai not installed; run: pip install langchain-azure-ai",
-)
+# Skip entire module if langchain_openai is not installed
+pytest.importorskip("langchain_openai", reason="langchain-openai not installed; run: pip install langchain-openai")
 
-from langchain_azure_ai.chat_models import AzureAIChatCompletionsModel
-from azure.core.credentials import AzureKeyCredential
+from langchain_openai import AzureChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 
 # ── Module-level setup ────────────────────────────────────────────────────────
@@ -61,21 +55,16 @@ pytestmark = [
 logger = logging.getLogger(__name__)
 
 
-def _llm(model: str) -> AzureAIChatCompletionsModel:
-    # client_kwargs are forwarded to ChatCompletionsClient:
-    #   transport  – use RequestsTransport to control SSL verification
-    #   headers    – pass X-API-Key for WSO2 gateway subscription auth
-    from azure.core.pipeline.transport import RequestsTransport
+def _llm(model: str) -> AzureChatOpenAI:
+    import httpx
 
-    return AzureAIChatCompletionsModel(
-        endpoint=_BASE_URL + "/models",
-        credential=AzureKeyCredential(_API_KEY),
-        model=model,
+    return AzureChatOpenAI(
+        azure_deployment=model,
         api_version=_API_VERSION,
-        client_kwargs={
-            "transport": RequestsTransport(connection_verify=_VERIFY_SSL),
-            "headers": {"X-API-Key": _API_KEY},
-        },
+        azure_endpoint=_BASE_URL,
+        api_key=_API_KEY,
+        http_client=httpx.Client(verify=_VERIFY_SSL),
+        default_headers={"X-API-Key": _API_KEY},
     )
 
 
@@ -85,7 +74,7 @@ def _llm(model: str) -> AzureAIChatCompletionsModel:
 @pytest.mark.parametrize("model", _MODELS)
 def test_invoke_basic(model):
     """Basic single-turn invoke returns non-empty content."""
-    logger.info("model=%s  endpoint=%s/models", model, _BASE_URL)
+    logger.info("model=%s  endpoint=%s", model, _BASE_URL)
     llm = _llm(model)
     response = llm.invoke([HumanMessage(content="Reply with the single word: Hello")])
     assert response.content and str(response.content).strip()

@@ -1,20 +1,18 @@
 """
-Azure AI Foundry proxy tests using the LangChain Azure AI SDK (langchain-azure-ai).
+Azure AI Foundry proxy tests using the LangChain SDK (langchain-openai).
 
-Requires: pip install langchain-azure-ai
+Requires: pip install langchain-openai
 
 Each enabled proxy with provider_type=azure_foundry in config.yaml gets its own
 parametrised run.
 
-Uses AzureAIChatCompletionsModel which drives the Azure AI Model Inference endpoint:
-  POST {endpoint}/chat/completions
+Uses AzureChatOpenAI which drives the OpenAI-compatible Azure deployment endpoint:
+  POST {azure_endpoint}/openai/deployments/{azure_deployment}/chat/completions
 
-The endpoint must include /models so the full path becomes /models/chat/completions.
 Gateway path rewriting (context = /azure-foundry-proxy, upstream = resource root):
-  endpoint passed: {base_url}/models
-  SDK sends to:    /azure-foundry-proxy/models/chat/completions
+  SDK constructs:  /azure-foundry-proxy/openai/deployments/{model}/chat/completions
   gateway strips:  /azure-foundry-proxy
-  gateway forwards:https://{resource}.cognitiveservices.azure.com/models/chat/completions
+  gateway forwards:https://{resource}.cognitiveservices.azure.com/openai/deployments/{model}/...
 """
 
 import logging
@@ -22,14 +20,10 @@ import pytest
 from typing import Any, Dict, List
 from utils.config import load_config, enabled_proxies_by_type, get_verify_ssl
 
-# Skip entire module if langchain-azure-ai is not installed
-pytest.importorskip(
-    "langchain_azure_ai",
-    reason="langchain-azure-ai not installed; run: pip install langchain-azure-ai",
-)
+# Skip entire module if langchain_openai is not installed
+pytest.importorskip("langchain_openai", reason="langchain-openai not installed; run: pip install langchain-openai")
 
-from langchain_azure_ai.chat_models import AzureAIChatCompletionsModel
-from azure.core.credentials import AzureKeyCredential
+from langchain_openai import AzureChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 
 # ── Module-level setup ────────────────────────────────────────────────────────
@@ -58,22 +52,17 @@ _skip = pytest.mark.skipif(
 )
 
 
-def _llm(proxy: Dict[str, Any], model: str) -> AzureAIChatCompletionsModel:
-    # client_kwargs are forwarded to ChatCompletionsClient:
-    #   transport  – use RequestsTransport to control SSL verification
-    #   headers    – pass X-API-Key for WSO2 gateway subscription auth
-    from azure.core.pipeline.transport import RequestsTransport
+def _llm(proxy: Dict[str, Any], model: str) -> AzureChatOpenAI:
+    import httpx
 
     api_key = proxy["api_key"]
-    return AzureAIChatCompletionsModel(
-        endpoint=proxy["base_url"] + "/models",
-        credential=AzureKeyCredential(api_key),
-        model=model,
+    return AzureChatOpenAI(
+        azure_deployment=model,
         api_version=proxy.get("api_version", "2024-05-01-preview"),
-        client_kwargs={
-            "transport": RequestsTransport(connection_verify=_VERIFY_SSL),
-            "headers": {"X-API-Key": api_key},
-        },
+        azure_endpoint=proxy["base_url"],
+        api_key=api_key,
+        http_client=httpx.Client(verify=_VERIFY_SSL),
+        default_headers={"X-API-Key": api_key},
     )
 
 
@@ -87,7 +76,7 @@ def _llm(proxy: Dict[str, Any], model: str) -> AzureAIChatCompletionsModel:
 @pytest.mark.parametrize("proxy,model", _PROXY_MODEL_PARAMS)
 def test_invoke_basic(proxy, model):
     """Basic single-turn invoke returns non-empty content."""
-    logger.info("proxy=%r  model=%s  endpoint=%s/models", proxy.get("name"), model, proxy.get("base_url"))
+    logger.info("proxy=%r  model=%s  endpoint=%s", proxy.get("name"), model, proxy.get("base_url"))
     llm = _llm(proxy, model)
     response = llm.invoke([HumanMessage(content="Reply with the single word: Hello")])
     assert response.content and str(response.content).strip()
