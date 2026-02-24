@@ -19,6 +19,8 @@ markers = [
     "gemini: Google Gemini provider/proxy",
     "mistral: Mistral provider/proxy",
     "bedrock: AWS Bedrock provider/proxy",
+    "azure_foundry: Azure AI Foundry provider/proxy",
+    "langchain: LangChain SDK tests",
     "chat: Chat completion tests",
     "embeddings: Embedding tests",
     "streaming: Streaming response tests",

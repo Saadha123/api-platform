@@ -66,13 +66,24 @@ providers:
       - "mistral-small-latest"
       - "mistral-large-latest"
 
+  # Azure AI Foundry – supports both OpenAI SDK (AzureOpenAI) and the
+  # azure-ai-inference SDK (ChatCompletionsClient).
+  # Configure upstream: https://<resource>.cognitiveservices.azure.com
+  azure_foundry:
+    enabled: false
+    base_url: "https://<gateway-host>/<provider-context>"
+    api_key: "gw_..."
+    api_version: "2024-05-01-preview"
+    models:
+      - "<azure-deployment-name>"
+
 
 
 # ── Proxies ───────────────────────────────────────────────────────────────────
 # Each proxy entry represents one LLM proxy created in the AI workspace.
 # provider_type controls which SDK / request format the test uses.
 # Valid provider_type values: openai, azure_openai, anthropic, gemini, mistral,
-#                              bedrock, meta
+#                              bedrock, meta, azure_foundry
 
 proxies:
   - name: "My Mistral Proxy"
@@ -114,5 +125,17 @@ proxies:
     base_url: "https://<gateway-host>/<proxy-context>"
     api_key: "gw_..."
     api_version: "2024-06-01"
+    models:
+      - "<azure-deployment-name>"
+
+  # Azure AI Foundry – supports OpenAI SDK (AzureOpenAI), azure-ai-inference SDK
+  # (ChatCompletionsClient), and LangChain (AzureAIChatCompletionsModel).
+  # Configure upstream: https://<resource>.cognitiveservices.azure.com
+  - name: "My Azure Foundry Proxy"
+    enabled: false
+    provider_type: "azure_foundry"
+    base_url: "https://<gateway-host>/<proxy-context>"
+    api_key: "gw_..."
+    api_version: "2024-05-01-preview"
     models:
       - "<azure-deployment-name>"
