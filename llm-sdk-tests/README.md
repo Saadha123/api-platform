@@ -1,85 +1,79 @@
 # LLM SDK Test Suite
 
-Integration tests for LLM providers and proxies created in the **AI workspace**.
-Each service provider is tested through its own native Python SDK, pointed at the
-gateway URL instead of the real provider endpoint.
+Integration tests for LLM providers and proxies configured in the **AI workspace**.
+Each provider is tested through its native Python SDK (and LangChain where applicable),
+pointed at your gateway URL instead of the real provider endpoint.
 
 ---
 
-## Providers & SDKs
+## Providers & SDKs tested
 
-| Provider | SDK | Chat | Streaming | Embeddings |
-|---|---|:---:|:---:|:---:|
-| OpenAI | `openai` | ✓ | ✓ | ✓ |
-| Azure OpenAI | `openai` (AzureOpenAI) | ✓ | ✓ | ✓ |
-| Anthropic | `anthropic` | ✓ | ✓ | – |
-| Google Gemini | `google-genai` | ✓ | ✓ | ✓ |
-| Mistral | `mistralai` | ✓ | ✓ | ✓ |
-| AWS Bedrock | `boto3` | ✓ (Converse) | ✓ (ConverseStream) | – |
-| Meta (Llama) | `openai` (OpenAI-compatible) | ✓ | ✓ | – |
+| Provider | Native SDK | LangChain |
+|---|---|---|
+| OpenAI | `openai` | `langchain-openai` |
+| Anthropic | `anthropic` | `langchain-anthropic` |
+| Google Gemini | `google-genai` | `langchain-google-genai` |
+| Mistral | `mistralai` + `openai` | `langchain-openai` |
+| Azure OpenAI | `openai` (AzureOpenAI) | `langchain-openai` |
+| Azure AI Foundry | `openai` (AzureOpenAI) | `langchain-openai` |
 
-Proxy tests run for every proxy listed in `config.yaml` and pick the right
-SDK automatically based on the proxy's `provider_type` field.
+Provider and proxy tests run independently — both are exercised for every
+enabled entry in `config.yaml`.
 
 ---
 
 ## Quick start
 
-### 1 – Prerequisites
+### 1 — Clone / copy this directory
+
+This test suite is self-contained. Copy the `llm-sdk-tests/` directory to any
+machine that can reach your gateway and run the steps below.
+
+### 2 — Set up the environment
 
 ```bash
-python -m pip install -r requirements.txt
+./setup.sh
 ```
 
-### 2 – Create your config file
+This creates a `venv/` virtual environment and installs all dependencies from `requirements.txt`.
+
+### 3 — Configure your gateway details
 
 ```bash
 cp config.yaml.example config.yaml
+# edit config.yaml — fill in base_url, api_key, and models for each provider
 ```
 
-Open `config.yaml` and fill in the details for every provider/proxy you want
-to test.  Set `enabled: true` for the ones you want to run.
+Set `enabled: true` for the providers/proxies you want to test.
+See the **Config reference** section below for field descriptions.
 
-**Where to get the values from:**
-
-| Field | Where to find it |
-|---|---|
-| `base_url` | Your gateway host + the context path you set when creating the provider/proxy in the AI workspace. For OpenAI-compatible providers add `/v1` at the end. |
-| `api_key` | The key generated in the AI workspace after clicking "Generate API Key" for that provider/proxy. |
-| `models` | The model IDs you configured in the provider/proxy (e.g. `gpt-4o-mini`). |
-
-### 3 – Run all tests
+### 4 — Run the tests
 
 ```bash
-cd api-platform/llm-sdk-tests
-pytest
+./run.sh                          # all enabled providers and proxies
+./run.sh -m openai                # OpenAI tests only
+./run.sh -m anthropic             # Anthropic tests only
+./run.sh -m gemini                # Gemini tests only
+./run.sh -m mistral               # Mistral tests only
+./run.sh -m azure_openai          # Azure OpenAI tests only
+./run.sh -m azure_foundry         # Azure AI Foundry tests only
+./run.sh -m proxy                 # all proxy tests
+./run.sh -m langchain             # all LangChain SDK tests
+./run.sh -m "chat and not proxy"  # chat tests for providers only
+./run.sh -m streaming             # streaming tests only
 ```
 
-### 4 – Run a specific provider
+Any extra arguments are forwarded to pytest:
 
 ```bash
-pytest -m openai          # OpenAI provider tests only
-pytest -m anthropic       # Anthropic tests only
-pytest -m gemini          # Gemini tests only
-pytest -m mistral         # Mistral tests only
-pytest -m bedrock         # AWS Bedrock tests only
-pytest -m meta            # Meta/Llama tests only
-pytest -m azure_openai    # Azure OpenAI tests only
-pytest -m proxy           # All proxy tests
+./run.sh -m openai -v --tb=long   # verbose output with full tracebacks
+./run.sh tests/providers/test_openai_provider.py  # a single file
 ```
 
-### 5 – Run only certain resource types
+### 5 — Use a custom config file
 
 ```bash
-pytest -m chat            # Chat/message completion tests
-pytest -m streaming       # Streaming tests
-pytest -m embeddings      # Embedding tests
-```
-
-### 6 – Use a different config file
-
-```bash
-LLM_TEST_CONFIG=/path/to/my-config.yaml pytest
+LLM_TEST_CONFIG=/path/to/other-config.yaml ./run.sh
 ```
 
 ---
@@ -87,86 +81,68 @@ LLM_TEST_CONFIG=/path/to/my-config.yaml pytest
 ## Config reference
 
 ```yaml
-# Skip TLS certificate verification for dev gateways with self-signed certs.
-verify_ssl: true          # set to false for local/dev environments
+# Set to false for dev gateways with self-signed TLS certificates.
+verify_ssl: true
 
 providers:
   openai:
     enabled: true
-    # Full base URL for the OpenAI SDK — include /v1
-    base_url: "https://<gateway-host>/<provider-context>/v1"
-    api_key: "gw_..."       # gateway-generated API key
+    # Gateway URL + the context path set in the AI workspace.
+    # Include /v1 at the end for OpenAI-compatible providers.
+    base_url: "https://<gateway-host>/<context>/v1"
+    api_key: "gw_..."     # key generated in the AI workspace
     models:
-      - "gpt-4o-mini"
-
-  azure_openai:
-    enabled: false
-    base_url: "https://<gateway-host>/<provider-context>"
-    api_key: "gw_..."
-    deployment: "gpt-4"         # Azure deployment name
-    api_version: "2024-05-01-preview"
-    models:
-      - "gpt-4"
+      - "gpt-4o-mini"     # model IDs configured in the provider
 
   anthropic:
     enabled: false
-    base_url: "https://<gateway-host>/<provider-context>"
+    base_url: "https://<gateway-host>/<context>"
     api_key: "gw_..."
     models:
-      - "claude-3-5-sonnet-20241022"
+      - "claude-sonnet-4-5"
 
   gemini:
     enabled: false
-    base_url: "https://<gateway-host>/<provider-context>"
+    base_url: "https://<gateway-host>/<context>"
     api_key: "gw_..."
     models:
-      - "gemini-1.5-flash"
+      - "gemini-2.5-flash"
 
   mistral:
     enabled: false
-    base_url: "https://<gateway-host>/<provider-context>"
+    base_url: "https://<gateway-host>/<context>"
     api_key: "gw_..."
     models:
       - "mistral-small-latest"
 
-  bedrock:
+  azure_openai:
     enabled: false
-    base_url: "https://<gateway-host>/<provider-context>"
-    api_key: "gw_..."     # gateway API key (injected as X-API-Key)
-    region: "us-east-1"
-    models:
-      - "amazon.titan-text-premier-v1:0"
-
-  meta:
-    enabled: false
-    # Gateway exposes Meta/Llama through an OpenAI-compatible endpoint
-    base_url: "https://<gateway-host>/<provider-context>/v1"
+    base_url: "https://<gateway-host>/<context>"
     api_key: "gw_..."
+    api_version: "2024-10-21"
     models:
-      - "us.meta.llama3-3-70b-instruct-v1:0"
+      - "<azure-deployment-name>"
+
+  azure_foundry:
+    enabled: false
+    base_url: "https://<gateway-host>/<context>"
+    api_key: "gw_..."
+    api_version: "2024-10-21"
+    models:
+      - "<azure-deployment-name>"
 
 proxies:
   - name: "My OpenAI Proxy"
     enabled: false
-    proxy_id: "my-proxy-id"
-    provider_type: "openai"   # openai | azure_openai | anthropic | gemini | mistral | bedrock | meta
-    base_url: "https://<gateway-host>/<proxy-context>/v1"
+    provider_type: "openai"   # controls which SDK is used
+    base_url: "https://<gateway-host>/<context>/v1"
     api_key: "gw_..."
     models:
       - "gpt-4o-mini"
 ```
 
----
-
-## AWS Bedrock auth notes
-
-The gateway manages the real AWS credentials on the upstream side.
-Client-side (test side) auth uses the gateway API key only.
-
-boto3 is configured with `UNSIGNED` (no AWS SigV4 signing) and a
-`before-send` event handler that injects `X-API-Key: <gateway-api-key>`
-into every request.  No real AWS credentials are required in the test
-environment.
+**`provider_type` values:** `openai`, `anthropic`, `gemini`, `mistral`,
+`azure_openai`, `azure_foundry`
 
 ---
 
@@ -174,22 +150,30 @@ environment.
 
 ```
 llm-sdk-tests/
-├── config.yaml.example   ← copy to config.yaml and fill in
-├── requirements.txt
-├── pyproject.toml        ← pytest config and markers
-├── conftest.py           ← shared session fixtures
+├── setup.sh                  ← create venv and install dependencies
+├── run.sh                    ← run the test suite
+├── config.yaml.example       ← copy to config.yaml and fill in
+├── config.yaml               ← your local config (git-ignored)
+├── requirements.txt          ← pinned dependencies (all SDKs including LangChain)
+├── pyproject.toml            ← pytest config and markers
+├── conftest.py
 ├── utils/
-│   ├── __init__.py
-│   └── config.py         ← config loading helpers
+│   └── config.py             ← config loading helpers
 └── tests/
-    ├── providers/
-    │   ├── test_openai_provider.py
-    │   ├── test_azure_openai_provider.py
-    │   ├── test_anthropic_provider.py
-    │   ├── test_gemini_provider.py
-    │   ├── test_mistral_provider.py
-    │   ├── test_bedrock_provider.py
-    │   └── test_meta_provider.py
-    └── proxies/
-        └── test_proxies.py   ← parameterised over all proxies in config.yaml
+    ├── providers/            ← one file per provider × SDK
+    └── proxies/              ← one file per provider_type × SDK
 ```
+
+---
+
+## Notes
+
+- **`verify_ssl: false`** — set this when your gateway uses a self-signed TLS
+  certificate (common in local/dev deployments). Never set it to false in
+  production.
+
+- **LangChain tests skip gracefully** — if a LangChain package is not
+  installed, its tests are skipped automatically (no error).
+
+- **Disabled providers/proxies** — tests for any entry with `enabled: false`
+  are skipped, so you only pay for what you enable.

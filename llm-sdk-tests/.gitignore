@@ -1,0 +1,15 @@
+# Virtual environment
+venv/
+
+# Config file contains API keys — never commit
+config.yaml
+
+# Python caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+*.egg-info/
+dist/
+build/
