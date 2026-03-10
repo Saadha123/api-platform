@@ -19,9 +19,9 @@
 package policy
 
 import (
+	"log/slog"
 	"strings"
 	"time"
-	"log/slog"
 
 	api "github.com/wso2/api-platform/gateway/gateway-controller/pkg/api/generated"
 	"github.com/wso2/api-platform/gateway/gateway-controller/pkg/config"
@@ -75,9 +75,9 @@ func DerivePolicyFromAPIConfig(cfg *models.StoredConfig, routerConfig *config.Ro
 				finalPolicies = make([]policyenginev1.PolicyInstance, 0, len(*apiData.Policies))
 				for _, p := range *apiData.Policies {
 					// Only append if the policy was successfully resolved (exists in apiPolicies map)
-				if v, ok := apiPolicies[p.Name]; ok {
-					finalPolicies = append(finalPolicies, v)
-				}
+					if v, ok := apiPolicies[p.Name]; ok {
+						finalPolicies = append(finalPolicies, v)
+					}
 				}
 			}
 
@@ -95,7 +95,7 @@ func DerivePolicyFromAPIConfig(cfg *models.StoredConfig, routerConfig *config.Ro
 
 			routeKey := xds.GenerateRouteName("SUB", apiData.Context, apiData.Version, ch.Name, routerConfig.GatewayHost)
 			props := make(map[string]any)
-			injectedPolicies := utils.InjectSystemPolicies(finalPolicies, systemConfig, props)
+			injectedPolicies := utils.InjectSystemPolicies(finalPolicies, systemConfig, props, cfg.Kind)
 
 			routes = append(routes, policyenginev1.PolicyChain{
 				RouteKey: routeKey,
@@ -160,7 +160,7 @@ func DerivePolicyFromAPIConfig(cfg *models.StoredConfig, routerConfig *config.Ro
 			// populatePropsForSystemPolicies(cfg.SourceConfiguration, props)
 
 			for _, vhost := range vhosts {
-				injectedPolicies := utils.InjectSystemPolicies(finalPolicies, systemConfig, props)
+				injectedPolicies := utils.InjectSystemPolicies(finalPolicies, systemConfig, props, cfg.Kind)
 
 				routes = append(routes, policyenginev1.PolicyChain{
 					RouteKey: xds.GenerateRouteName(string(op.Method), apiData.Context, apiData.Version, op.Path, vhost),
