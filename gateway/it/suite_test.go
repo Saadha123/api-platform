@@ -130,6 +130,7 @@ func getFeaturePaths() []string {
 		"features/analytics-basic.feature",
 		"features/token-based-ratelimit.feature",
 		"features/llm-cost.feature",
+		"features/subscription-validation.feature",
 	}
 
 	raw := strings.TrimSpace(os.Getenv("IT_FEATURE_PATHS"))
