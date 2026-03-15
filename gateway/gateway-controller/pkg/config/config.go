@@ -49,6 +49,7 @@ type Config struct {
 	PolicyEngine         map[string]interface{} `koanf:"policy_engine"`
 	PolicyConfigurations map[string]interface{} `koanf:"policy_configurations"`
 	Analytics            AnalyticsConfig        `koanf:"analytics"`
+	LLMCost              LLMCostConfig          `koanf:"llm_cost"`
 	TracingConfig        TracingConfig          `koanf:"tracing"`
 	APIKey               APIKeyConfig           `koanf:"api_key"`
 	// Subscriptions controls application-level subscription behaviour for APIs.
@@ -65,6 +66,14 @@ type AnalyticsConfig struct {
 	// AllowPayloads controls whether request and response bodies are captured
 	// into analytics metadata and forwarded to analytics publishers.
 	AllowPayloads bool `koanf:"allow_payloads"`
+}
+
+// LLMCostConfig holds configuration for the llm-cost system policy.
+type LLMCostConfig struct {
+	// Enabled is the master switch. When false the policy is not injected into any route.
+	Enabled bool `koanf:"enabled"`
+	// PricingFile is an optional path to a JSON file that overrides or extends the embedded pricing database.
+	PricingFile string `koanf:"pricing_file"`
 }
 
 // SubscriptionsConfig holds configuration for application-level subscriptions.
