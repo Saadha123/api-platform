@@ -23,6 +23,7 @@ on:
   pull_request:
     branches:
       - main
+      - wftest/eg-base  # TEST ONLY, never upstream
     paths:
       - 'event-gateway/**'
       - 'gateway/gateway-controller/**'
