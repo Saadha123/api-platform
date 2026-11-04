@@ -38,3 +38,4 @@ func (k Key[T]) MustGet(ctx context.Context) T {
 	}
 	return v
 }
+// wftest: trigger check, do not merge
