@@ -87,7 +87,7 @@ describe('GatewaysList permissions', () => {
   it('disables every action for a user holding none of the scopes', () => {
     renderWith(all(false));
 
-    expect(isDisabled(screen.getByRole('button', { name: 'Add Gateway' }))).toBe(true);
+    expect(isDisabled(screen.getByRole('button', { name: 'Add API Gateway' }))).toBe(true);
     expect(isDisabled(screen.getByRole('button', { name: 'Edit Dev edge' }))).toBe(true);
     expect(isDisabled(screen.getByRole('button', { name: 'Configure Dev edge' }))).toBe(true);
     expect(isDisabled(screen.getByRole('button', { name: 'Delete Dev edge' }))).toBe(true);
@@ -96,7 +96,7 @@ describe('GatewaysList permissions', () => {
   it('offers every action to a user holding them', () => {
     renderWith(all(true));
 
-    expect(isDisabled(screen.getByRole('button', { name: 'Add Gateway' }))).toBe(false);
+    expect(isDisabled(screen.getByRole('button', { name: 'Add API Gateway' }))).toBe(false);
     expect(isDisabled(screen.getByRole('button', { name: 'Edit Dev edge' }))).toBe(false);
     expect(isDisabled(screen.getByRole('button', { name: 'Configure Dev edge' }))).toBe(false);
     expect(isDisabled(screen.getByRole('button', { name: 'Delete Dev edge' }))).toBe(false);
@@ -107,7 +107,7 @@ describe('GatewaysList permissions', () => {
   it('gates each action on its own scope', () => {
     renderWith({ ...all(false), update: true, readConfiguration: true });
 
-    expect(isDisabled(screen.getByRole('button', { name: 'Add Gateway' }))).toBe(true);
+    expect(isDisabled(screen.getByRole('button', { name: 'Add API Gateway' }))).toBe(true);
     expect(isDisabled(screen.getByRole('button', { name: 'Edit Dev edge' }))).toBe(false);
     expect(isDisabled(screen.getByRole('button', { name: 'Configure Dev edge' }))).toBe(false);
     expect(isDisabled(screen.getByRole('button', { name: 'Delete Dev edge' }))).toBe(true);
