@@ -459,10 +459,12 @@ starts only because another needs it (the Platform API an API Portal depends on)
 | File | Products the tests check | Generic block |
 |---|---|---|
 | `blocks/gateway.yaml` | gateway | `gateway-core` |
-| `blocks/platform-api.yaml` | Platform API | (its only block) |
 | `blocks/platform-api-gateway.yaml` | Platform API + gateway | `platform-api-core` |
 | `blocks/api-portal.yaml` | API Portal | `api-portal-core` |
 | `blocks/platform-api-gateway-api-portal.yaml` | Platform API + API Portal + gateway | `platform-api-gateway-api-portal` |
+
+The one Platform API-only block, `platform-api-webhook-legacy-disabled`, lives in
+`blocks/platform-api-gateway.yaml` even though it starts no gateway; a comment above it says so.
 
 To add a feature to the suite:
 
